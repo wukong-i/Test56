@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Canvas Buttons</title>
+<title>Telegram Canvas Mini App</title>
 
 <style>
   html, body {
@@ -11,8 +11,9 @@
     padding: 0;
     overflow: hidden;
     background: #020617;
-    touch-action: none;
+    touch-action: manipulation;
   }
+
   canvas {
     display: block;
   }
@@ -23,6 +24,7 @@
 <canvas id="app"></canvas>
 
 <script>
+  // Expand Telegram Mini App safely
   if (window.Telegram?.WebApp) {
     Telegram.WebApp.expand();
   }
@@ -65,6 +67,7 @@
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Background
     ctx.fillStyle = "#020617";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -82,38 +85,38 @@
   }
 
   function handlePress(x, y) {
-    buttons.forEach(btn => {
+    for (const btn of buttons) {
       if (
-        x > btn.x &&
-        x < btn.x + btn.w &&
-        y > btn.y &&
-        y < btn.y + btn.h
+        x >= btn.x &&
+        x <= btn.x + btn.w &&
+        y >= btn.y &&
+        y <= btn.y + btn.h
       ) {
-        // Dummy navigation (safe for Telegram)
-        Telegram?.WebApp?.openLink
-          ? Telegram.WebApp.openLink(btn.url)
-          : window.location.href = btn.url;
+        if (window.Telegram?.WebApp) {
+          Telegram.WebApp.openLink(btn.url, { try_instant_view: false });
+        } else {
+          window.open(btn.url, "_blank");
+        }
+        break;
       }
-    });
+    }
   }
 
-  // Touch
+  // Touch support
   canvas.addEventListener("touchend", e => {
-    e.preventDefault();
     const t = e.changedTouches[0];
     const r = canvas.getBoundingClientRect();
     handlePress(t.clientX - r.left, t.clientY - r.top);
-  }, { passive: false });
+  });
 
-  // Mouse
+  // Mouse support
   canvas.addEventListener("click", e => {
     const r = canvas.getBoundingClientRect();
     handlePress(e.clientX - r.left, e.clientY - r.top);
   });
 
-  // Extra protection
+  // Disable context menu only (Telegram-safe)
   document.addEventListener("contextmenu", e => e.preventDefault());
-  document.addEventListener("touchstart", e => e.preventDefault(), { passive: false });
 </script>
 
 </body>
