@@ -3,17 +3,16 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Canvas Mini App</title>
+<title>Canvas Buttons</title>
 
 <style>
   html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background: #0f172a;
+    background: #020617;
     touch-action: none;
   }
-
   canvas {
     display: block;
   }
@@ -24,7 +23,6 @@
 <canvas id="app"></canvas>
 
 <script>
-  // Telegram expand (safe even if not in Telegram)
   if (window.Telegram?.WebApp) {
     Telegram.WebApp.expand();
   }
@@ -32,71 +30,90 @@
   const canvas = document.getElementById("app");
   const ctx = canvas.getContext("2d");
 
+  let buttons = [];
+
   function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    createButtons();
     draw();
   }
 
   window.addEventListener("resize", resize);
   resize();
 
+  function createButtons() {
+    const bw = 260;
+    const bh = 64;
+    const gap = 18;
+    const startY = canvas.height / 2 - (bh * 2);
+
+    buttons = [
+      { text: "Link One",   url: "https://example.com/1" },
+      { text: "Link Two",   url: "https://example.com/2" },
+      { text: "Link Three", url: "https://example.com/3" },
+      { text: "Link Four",  url: "https://example.com/4" }
+    ].map((b, i) => ({
+      ...b,
+      x: canvas.width / 2 - bw / 2,
+      y: startY + i * (bh + gap),
+      w: bw,
+      h: bh
+    }));
+  }
+
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Background
-    ctx.fillStyle = "#0f172a";
+    ctx.fillStyle = "#020617";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Button
-    const btn = {
-      x: canvas.width / 2 - 120,
-      y: canvas.height / 2 - 40,
-      w: 240,
-      h: 80
-    };
-
-    ctx.fillStyle = "#2563eb";
-    ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 22px Arial";
+    ctx.font = "bold 20px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("TAP ME", canvas.width / 2, canvas.height / 2);
 
-    canvas.btn = btn;
+    buttons.forEach(btn => {
+      ctx.fillStyle = "#2563eb";
+      ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(btn.text, btn.x + btn.w / 2, btn.y + btn.h / 2);
+    });
   }
 
-  // Touch handling (prevents long-press behavior)
-  canvas.addEventListener("touchstart", e => e.preventDefault(), { passive: false });
+  function handlePress(x, y) {
+    buttons.forEach(btn => {
+      if (
+        x > btn.x &&
+        x < btn.x + btn.w &&
+        y > btn.y &&
+        y < btn.y + btn.h
+      ) {
+        // Dummy navigation (safe for Telegram)
+        Telegram?.WebApp?.openLink
+          ? Telegram.WebApp.openLink(btn.url)
+          : window.location.href = btn.url;
+      }
+    });
+  }
+
+  // Touch
   canvas.addEventListener("touchend", e => {
     e.preventDefault();
-    const touch = e.changedTouches[0];
-    const rect = canvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-
-    const b = canvas.btn;
-    if (x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h) {
-      alert("Button tapped!");
-    }
+    const t = e.changedTouches[0];
+    const r = canvas.getBoundingClientRect();
+    handlePress(t.clientX - r.left, t.clientY - r.top);
   }, { passive: false });
 
-  // Desktop click support
+  // Mouse
   canvas.addEventListener("click", e => {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const b = canvas.btn;
-
-    if (x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h) {
-      alert("Button clicked!");
-    }
+    const r = canvas.getBoundingClientRect();
+    handlePress(e.clientX - r.left, e.clientY - r.top);
   });
 
-  // Extra safety
+  // Extra protection
   document.addEventListener("contextmenu", e => e.preventDefault());
+  document.addEventListener("touchstart", e => e.preventDefault(), { passive: false });
 </script>
 
 </body>
