@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Canvas Mini App</title>
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #0f172a;
+    touch-action: none;
+  }
+
+  canvas {
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="app"></canvas>
+
+<script>
+  // Telegram expand (safe even if not in Telegram)
+  if (window.Telegram?.WebApp) {
+    Telegram.WebApp.expand();
+  }
+
+  const canvas = document.getElementById("app");
+  const ctx = canvas.getContext("2d");
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    draw();
+  }
+
+  window.addEventListener("resize", resize);
+  resize();
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Background
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Button
+    const btn = {
+      x: canvas.width / 2 - 120,
+      y: canvas.height / 2 - 40,
+      w: 240,
+      h: 80
+    };
+
+    ctx.fillStyle = "#2563eb";
+    ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 22px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("TAP ME", canvas.width / 2, canvas.height / 2);
+
+    canvas.btn = btn;
+  }
+
+  // Touch handling (prevents long-press behavior)
+  canvas.addEventListener("touchstart", e => e.preventDefault(), { passive: false });
+  canvas.addEventListener("touchend", e => {
+    e.preventDefault();
+    const touch = e.changedTouches[0];
+    const rect = canvas.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    const b = canvas.btn;
+    if (x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h) {
+      alert("Button tapped!");
+    }
+  }, { passive: false });
+
+  // Desktop click support
+  canvas.addEventListener("click", e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const b = canvas.btn;
+
+    if (x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h) {
+      alert("Button clicked!");
+    }
+  });
+
+  // Extra safety
+  document.addEventListener("contextmenu", e => e.preventDefault());
+</script>
+
+</body>
+</html>
